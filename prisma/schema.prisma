@@ -1,0 +1,218 @@
+// Sistema de Costeo de Joyería Artesanal
+// Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== CONFIGURACIÓN GLOBAL ====================
+
+model ConfiguracionGlobal {
+  id             String   @id @default(cuid())
+  tipoCambio     Float    @default(4000)  // COP por USD
+  impuesto       Float    @default(0.19)  // 19%
+  margenGanancia Float    @default(0.15)  // 15% por defecto
+  gramosProducidosMes Float @default(509) // Promedio mensual de gramos
+  actualizadoEn  DateTime @updatedAt
+}
+
+// ==================== COSTOS FIJOS E INDIRECTOS ====================
+
+model CostoFijo {
+  id            String   @id @default(cuid())
+  nombre        String   // "Luz", "Agua", "Arriendo"
+  categoria     String   // "servicio", "material", "consumible"
+  valor         Float    // Valor mensual en COP
+  periodo       String   @default("mensual") // mensual, anual
+  notas         String?
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+}
+
+model Depreciacion {
+  id            String   @id @default(cuid())
+  nombre        String   // "Herramientas", "Oficina"
+  valorInicial  Float    // Valor total del activo
+  vidaUtilAnios Int      // 5 para herramientas, 10 para oficina
+  fechaInicio   DateTime @default(now())
+  valorMensual  Float    // Calculado: valorInicial / (vidaUtilAnios * 12)
+  activo        Boolean  @default(true)
+}
+
+// ==================== MATERIALES E INVENTARIO ====================
+
+model TipoPiedra {
+  id          String        @id @default(cuid())
+  nombre      String        @unique // "Diamante", "Esmeralda", "Rubí"
+  precioCop   Float         // Precio en COP
+  esNatural   Boolean       @default(true)
+  categoria   String?       // "preciosa", "semipreciosa", "sintética"
+  descripcion String?
+  activo      Boolean       @default(true)
+  creadoEn    DateTime      @default(now())
+  piezaPiedras PiezaPiedra[]
+}
+
+model Esmalte {
+  id              String   @id @default(cuid())
+  nombre          String
+  color           String?
+  cantidadCompra  Float    // Cantidad comprada
+  unidadCompra    String   // "kg", "20g", "30g", "1oz"
+  precioCompra    Float    // Precio total de compra
+  precioPorGramo  Float    // Calculado automáticamente
+  stockActual     Float?   // Gramos restantes
+  activo          Boolean  @default(true)
+  creadoEn        DateTime @default(now())
+}
+
+// ==================== PIEZAS Y PRODUCCIÓN ====================
+
+model Pieza {
+  id             String        @id @default(cuid())
+  codigo         String        @unique // Ej: "AR-PL-10G-CZ34-RU2-235"
+  nombre         String?
+  tipoJoya       String        // "aretes", "anillo", "collar", "brazalete", "dije", "broche"
+  coleccion      String?
+  material       String        @default("plata") // "plata", "oro"
+  pesoGramos     Float
+
+  // Metal del padre (50% ganancia si usa)
+  esMetalPropio  Boolean       @default(true)
+
+  // Costos calculados
+  costoPCG       Float?        // Precio costo gramo aplicado
+  costoMaterial  Float?        // peso * PCG
+  costoPiedras   Float?
+  costoEsmalte   Float?
+  costoEtapas    Float?        // Suma de todas las etapas
+  costoTotal     Float?
+
+  // Precios
+  precioSugerido  Float?       // costoTotal + margen
+  descuentoMaximo Float?       // Hasta donde puede bajar sin perder
+
+  // Estado
+  estado         String        @default("produccion") // produccion, terminada, vendida
+  fechaCreacion  DateTime      @default(now())
+  fechaTerminado DateTime?
+  notas          String?
+
+  // Relaciones
+  etapas         EtapaCosto[]
+  piedras        PiezaPiedra[]
+  venta          Venta?
+}
+
+model EtapaCosto {
+  id             String   @id @default(cuid())
+  piezaId        String
+  pieza          Pieza    @relation(fields: [piezaId], references: [id], onDelete: Cascade)
+
+  etapa          Int      // 1-8 según flujo de producción
+  nombre         String   // "Diseño", "Impresión 3D", etc.
+
+  // Costos específicos por etapa
+  costoServicio  Float?   // Servicios externos (fundición)
+  costoMaterial  Float?   // Materiales usados (resina, esmalte)
+  costoConsumo   Float?   // Consumibles (brocas, ácido)
+  tiempoHoras    Float?   // Tiempo dedicado (para futuro)
+
+  costoTotal     Float    // Suma de los costos de esta etapa
+  notas          String?
+  completada     Boolean  @default(false)
+  fechaCompletada DateTime?
+
+  @@index([piezaId])
+}
+
+model PiezaPiedra {
+  id             String     @id @default(cuid())
+  piezaId        String
+  pieza          Pieza      @relation(fields: [piezaId], references: [id], onDelete: Cascade)
+  tipoPiedraId   String
+  tipoPiedra     TipoPiedra @relation(fields: [tipoPiedraId], references: [id])
+
+  cantidad       Int
+  esPrincipal    Boolean    @default(true) // Principal vs secundaria
+  tamano         String?
+  limpieza       String?
+  color          String?
+
+  precioUnitario Float      // Precio al momento de uso
+  costoTotal     Float      // cantidad * precioUnitario
+
+  @@index([piezaId])
+  @@index([tipoPiedraId])
+}
+
+// ==================== VENTAS ====================
+
+model Venta {
+  id             String      @id @default(cuid())
+  piezaId        String      @unique
+  pieza          Pieza       @relation(fields: [piezaId], references: [id])
+
+  fecha          DateTime    @default(now())
+  precioMarcado  Float       // Precio original
+  precioReal     Float       // Precio de venta real
+  descuento      Float?      // Porcentaje de descuento aplicado
+
+  // Ganancia calculada
+  gananciaTotal  Float?      // precioReal - costoTotal
+  gananciaPapa   Float?      // Si usaba metal del padre: 50% de ganancia
+  gananciaNeta   Float?      // Lo que queda para Olga
+
+  // Contexto de venta
+  esExposicion   Boolean     @default(false)
+  exposicionId   String?
+  exposicion     Exposicion? @relation(fields: [exposicionId], references: [id])
+
+  cliente        String?
+  notas          String?
+
+  @@index([exposicionId])
+}
+
+// ==================== EXPOSICIONES Y FERIAS ====================
+
+model Exposicion {
+  id              String   @id @default(cuid())
+  nombre          String
+  ubicacion       String?
+  fechaInicio     DateTime
+  fechaFin        DateTime?
+
+  // Costos de participación
+  costoStand      Float?
+  costoVitrina    Float?
+  costoLuces      Float?
+  costoMontaje    Float?
+  costoTransporte Float?
+  costoOtros      Float?
+  costoTotal      Float?   // Suma de todos los costos
+
+  // Para prorrateo
+  piezasLlevadas  Int?
+  costoPorPieza   Float?   // costoTotal / piezasLlevadas
+
+  ventas          Venta[]
+  notas           String?
+}
+
+// ==================== CONFIGURACIÓN DE ETAPAS ====================
+
+model ConfigEtapa {
+  id              String  @id @default(cuid())
+  numeroEtapa     Int     @unique // 1-8
+  nombre          String  // "Diseño", "Impresión 3D", etc.
+  descripcion     String?
+  costoFijoDefault Float? // Costo fijo por defecto para esta etapa
+  activo          Boolean @default(true)
+}
