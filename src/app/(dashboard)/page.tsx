@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCOP } from '@/lib/utils'
-import { Package, DollarSign, TrendingUp, Gem } from 'lucide-react'
+import { Package, DollarSign, TrendingUp, Gem, Plus } from 'lucide-react'
 
 async function getStats() {
   const [piezasEnProduccion, totalPiedras, totalCostosFijos] = await Promise.all([
@@ -39,62 +39,80 @@ export default async function DashboardPage() {
   const piezasRecientes = await getPiezasRecientes()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <div>
+          <h1 className="text-3xl tracking-wide text-black">Dashboard</h1>
+          <div className="lebedeva-divider w-24 mt-2" />
+        </div>
         <Link href="/piezas/nueva">
-          <Button>+ Nueva Pieza</Button>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Pieza
+          </Button>
         </Link>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              Piezas en Producción
+            <CardTitle className="text-sm font-normal text-gray-500 uppercase tracking-widest">
+              En Producción
             </CardTitle>
-            <Package className="h-4 w-4 text-gray-400" />
+            <Package className="h-5 w-5 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.piezasEnProduccion}</div>
+            <div className="text-4xl font-light" style={{ fontFamily: 'Cormorant, serif' }}>
+              {stats.piezasEnProduccion}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">piezas</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
+            <CardTitle className="text-sm font-normal text-gray-500 uppercase tracking-widest">
               Tipos de Piedras
             </CardTitle>
-            <Gem className="h-4 w-4 text-gray-400" />
+            <Gem className="h-5 w-5 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPiedras}</div>
+            <div className="text-4xl font-light" style={{ fontFamily: 'Cormorant, serif' }}>
+              {stats.totalPiedras}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">en catálogo</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              Costos Fijos Mensuales
+            <CardTitle className="text-sm font-normal text-gray-500 uppercase tracking-widest">
+              Costos Mensuales
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-gray-400" />
+            <DollarSign className="h-5 w-5 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCOP(stats.totalCostosFijos)}</div>
+            <div className="text-3xl font-light" style={{ fontFamily: 'Cormorant, serif' }}>
+              {formatCOP(stats.totalCostosFijos)}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">costos fijos</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
+            <CardTitle className="text-sm font-normal text-gray-500 uppercase tracking-widest">
               Ganancia del Mes
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-gray-400" />
+            <TrendingUp className="h-5 w-5 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">$0</div>
-            <p className="text-xs text-gray-500">Sin ventas registradas</p>
+            <div className="text-4xl font-light" style={{ fontFamily: 'Cormorant, serif' }}>
+              $0
+            </div>
+            <p className="text-xs text-gray-400 mt-1">sin ventas registradas</p>
           </CardContent>
         </Card>
       </div>
@@ -103,70 +121,89 @@ export default async function DashboardPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Piezas Recientes</CardTitle>
-            <Link href="/piezas" className="text-sm text-blue-600 hover:underline">
-              Ver todas
+            <div>
+              <CardTitle className="text-xl">Piezas Recientes</CardTitle>
+              <div className="lebedeva-divider w-16 mt-2" />
+            </div>
+            <Link
+              href="/piezas"
+              className="text-xs uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
+            >
+              Ver todas →
             </Link>
           </div>
         </CardHeader>
         <CardContent>
           {piezasRecientes.length === 0 ? (
-            <div className="text-center py-8">
-              <Gem className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-semibold text-gray-900">No hay piezas</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Comienza creando tu primera pieza de joyería.
+            <div className="text-center py-16">
+              <Gem className="mx-auto h-16 w-16 text-gray-200" />
+              <h3
+                className="mt-4 text-xl text-gray-900"
+                style={{ fontFamily: 'Cormorant, serif' }}
+              >
+                No hay piezas registradas
+              </h3>
+              <p
+                className="mt-2 text-sm text-gray-500"
+                style={{ fontFamily: 'Comfortaa, sans-serif' }}
+              >
+                Comienza creando tu primera pieza de joyería artesanal
               </p>
-              <div className="mt-6">
+              <div className="mt-8">
                 <Link href="/piezas/nueva">
-                  <Button>+ Nueva Pieza</Button>
+                  <Button variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crear Primera Pieza
+                  </Button>
                 </Link>
               </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full">
                 <thead>
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <tr className="border-b border-gray-100">
+                    <th className="px-4 py-3 text-left text-[10px] font-normal text-gray-400 uppercase tracking-widest">
                       Código
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-[10px] font-normal text-gray-400 uppercase tracking-widest">
                       Tipo
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-[10px] font-normal text-gray-400 uppercase tracking-widest">
                       Peso
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-[10px] font-normal text-gray-400 uppercase tracking-widest">
                       Costo Total
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-[10px] font-normal text-gray-400 uppercase tracking-widest">
                       Estado
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {piezasRecientes.map((pieza) => (
-                    <tr key={pieza.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-blue-600">
-                        <Link href={`/piezas/${pieza.id}`}>{pieza.codigo}</Link>
+                    <tr key={pieza.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-4 text-sm">
+                        <Link href={`/piezas/${pieza.id}`} className="text-black hover:underline">
+                          {pieza.codigo}
+                        </Link>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 capitalize">
+                      <td className="px-4 py-4 text-sm text-gray-600 capitalize">
                         {pieza.tipoJoya}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
+                      <td className="px-4 py-4 text-sm text-gray-600">
                         {pieza.pesoGramos}g
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {pieza.costoTotal ? formatCOP(pieza.costoTotal) : '-'}
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {pieza.costoTotal ? formatCOP(pieza.costoTotal) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      <td className="px-4 py-4 text-sm">
+                        <span className={`inline-flex items-center px-3 py-1 text-[10px] uppercase tracking-widest ${
                           pieza.estado === 'produccion'
-                            ? 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-gray-100 text-gray-600'
                             : pieza.estado === 'terminada'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-black text-white'
+                            : 'bg-gray-200 text-gray-700'
                         }`}>
                           {pieza.estado}
                         </span>

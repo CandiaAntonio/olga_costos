@@ -33,39 +33,73 @@ export function MobileNav() {
   return (
     <div className="lg:hidden">
       {/* Header móvil */}
-      <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm">
+      <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4">
         <button
           type="button"
-          className="-m-2.5 p-2.5 text-gray-700"
+          className="-m-2.5 p-2.5 text-black"
           onClick={() => setIsOpen(true)}
         >
           <span className="sr-only">Abrir menú</span>
           <Menu className="h-6 w-6" aria-hidden="true" />
         </button>
         <div className="flex-1 text-center">
-          <span className="font-semibold text-gray-900">Joyería Olga</span>
+          <span
+            className="text-lg tracking-[0.2em] text-black uppercase"
+            style={{ fontFamily: 'Cormorant, serif' }}
+          >
+            Lebedeva
+          </span>
         </div>
+        <div className="w-10" /> {/* Spacer para centrar */}
       </div>
 
       {/* Menú móvil */}
       {isOpen && (
         <div className="relative z-50">
-          <div className="fixed inset-0 bg-gray-900/80" onClick={() => setIsOpen(false)} />
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+          />
           <div className="fixed inset-0 flex">
             <div className="relative mr-16 flex w-full max-w-xs flex-1">
               <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
-                <button type="button" className="-m-2.5 p-2.5" onClick={() => setIsOpen(false)}>
+                <button
+                  type="button"
+                  className="-m-2.5 p-2.5"
+                  onClick={() => setIsOpen(false)}
+                >
                   <span className="sr-only">Cerrar menú</span>
                   <X className="h-6 w-6 text-white" aria-hidden="true" />
                 </button>
               </div>
 
               <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
-                <div className="flex h-16 shrink-0 items-center">
-                  <span className="text-xl font-bold">Joyería Olga</span>
+                {/* Logo */}
+                <div className="flex h-20 shrink-0 items-center justify-center border-b border-gray-100">
+                  <div className="text-center">
+                    <h1
+                      className="text-xl tracking-[0.3em] text-black uppercase"
+                      style={{ fontFamily: 'Cormorant, serif' }}
+                    >
+                      Lebedeva
+                    </h1>
+                    <p
+                      className="text-[9px] tracking-[0.4em] text-gray-500 uppercase mt-1"
+                      style={{ fontFamily: 'Comfortaa, sans-serif' }}
+                    >
+                      Jewelry
+                    </p>
+                  </div>
                 </div>
+
+                <div className="text-center">
+                  <p className="text-[10px] tracking-widest text-gray-400 uppercase">
+                    Sistema de Costeo
+                  </p>
+                </div>
+
                 <nav className="flex flex-1 flex-col">
-                  <ul role="list" className="flex flex-1 flex-col gap-y-7">
+                  <ul role="list" className="flex flex-1 flex-col gap-y-2">
                     <li>
                       <ul role="list" className="-mx-2 space-y-1">
                         {navigation.map((item) => {
@@ -77,20 +111,21 @@ export function MobileNav() {
                                 href={item.href}
                                 onClick={() => setIsOpen(false)}
                                 className={cn(
-                                  'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
+                                  'group flex gap-x-3 rounded-sm px-3 py-3 text-sm transition-all duration-200',
                                   isActive
-                                    ? 'bg-gray-100 text-blue-600'
-                                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                                    ? 'bg-black text-white'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
                                 )}
+                                style={{ fontFamily: 'Comfortaa, sans-serif' }}
                               >
                                 <item.icon
                                   className={cn(
-                                    'h-6 w-6 shrink-0',
-                                    isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-600'
+                                    'h-5 w-5 shrink-0',
+                                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-black'
                                   )}
                                   aria-hidden="true"
                                 />
-                                {item.name}
+                                <span className="tracking-wide">{item.name}</span>
                               </Link>
                             </li>
                           )

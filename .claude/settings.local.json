@@ -1,19 +1,9 @@
-{
+1{
   "permissions": {
     "allow": [
-      "mcp__ide__executeCode",
+       "mcp__ide__executeCode",
       "Bash(python:*)",
-      "WebSearch",
-      "Bash(dir:*)",
-      "Bash(npx create-next-app@latest:*)",
-      "Bash(npm init:*)",
-      "Bash(npm install:*)",
-      "Bash(npx tailwindcss:*)",
-      "Bash(npm run build:*)",
-      "Bash(npx prisma:*)",
-      "Bash(npx tsx:*)",
-      "Bash(npm uninstall:*)",
-      "Bash(npm run dev:*)"
+      "WebSearch"
     ]
   }
 }

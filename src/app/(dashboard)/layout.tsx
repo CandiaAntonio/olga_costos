@@ -10,8 +10,8 @@ export default function DashboardLayout({
     <>
       <Sidebar />
       <MobileNav />
-      <main className="lg:pl-64">
-        <div className="px-4 py-6 sm:px-6 lg:px-8">
+      <main className="lg:pl-72 min-h-screen bg-gray-50">
+        <div className="px-4 py-8 sm:px-6 lg:px-10 max-w-7xl mx-auto">
           {children}
         </div>
       </main>
