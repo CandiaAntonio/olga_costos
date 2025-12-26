@@ -1,8 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/(dashboard)/inventario/piedras/page": "app/(dashboard)/inventario/piedras/page.js",
-  "/(dashboard)/page": "app/(dashboard)/page.js",
-  "/(dashboard)/ventas/page": "app/(dashboard)/ventas/page.js",
-  "/(dashboard)/configuracion/page": "app/(dashboard)/configuracion/page.js",
-  "/(dashboard)/costos-fijos/page": "app/(dashboard)/costos-fijos/page.js"
-}
