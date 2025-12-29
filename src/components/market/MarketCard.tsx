@@ -2,8 +2,7 @@
 
 import { MarketItem } from '@/lib/market-service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpIcon, ArrowDownIcon, MinusIcon, TrendingUp } from 'lucide-react';
-import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
+import { ArrowUpIcon, ArrowDownIcon, MinusIcon } from 'lucide-react';
 
 interface MarketCardProps {
     item: MarketItem;
