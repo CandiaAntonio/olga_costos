@@ -23,27 +23,43 @@ export function MarketCard({ item, onClick, isSelected }: MarketCardProps) {
         unitLabel = 'COP';
     }
 
+    // Determine locale for formatting
+    const locale = item.currency === 'COP' ? 'es-CO' : 'en-US';
+
     return (
         <Card
-            className={`overflow-hidden border shadow-sm hover:shadow-md transition-all ${isSelected ? 'ring-2 ring-primary border-primary' : ''
-                }`}
+            className={`overflow-hidden border shadow-sm hover:shadow-md transition-all cursor-pointer text-left w-full
+                ${isSelected ? 'ring-2 ring-primary border-primary bg-accent/5' : 'hover:bg-accent/50'}
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
             onClick={onClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onClick?.();
+                }
+            }}
+            aria-selected={isSelected}
         >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-muted/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-4 pt-3 bg-muted/50">
                 <CardTitle className="text-sm font-medium uppercase tracking-wide">
                     {item.name}
                 </CardTitle>
                 <div className="text-xs font-mono text-muted-foreground">{unitLabel}</div>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="px-4 pb-3 pt-2">
                 <div className="flex justify-between items-end">
                     <div>
                         <div className="text-2xl font-bold font-mono tracking-tight">
-                            {item.currency === 'USD' ? '$' : ''}
-                            {item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            {item.currency !== 'USD' ? ` ${item.currency}` : ''}
+                            {new Intl.NumberFormat(locale, {
+                                style: 'currency',
+                                currency: item.currency,
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(item.price)}
                         </div>
-                        <div className="flex items-center space-x-2 text-xs mt-1">
+                        <div className="flex items-center space-x-2 text-xs mt-0.5">
                             <span className={`font-mono font-medium flex items-center ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-500'}`}>
                                 {isPositive && <ArrowUpIcon className="h-3 w-3 mr-1" />}
                                 {isNegative && <ArrowDownIcon className="h-3 w-3 mr-1" />}

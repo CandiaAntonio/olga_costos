@@ -20,14 +20,14 @@ export interface MarketData {
     lastUpdated: string;
 }
 
-export async function getMarketData(): Promise<MarketData> {
+export async function getMarketData(forceRefresh: boolean = false): Promise<MarketData> {
     noStore();
 
     // 1. Try to get today's data from DB
     // We will check if we have data for 'XAU' today or very recent
     // If not, we try to fetch from Yahoo and save.
 
-    await updateMarketDataIfNeeded();
+    await updateMarketDataIfNeeded(forceRefresh);
 
     const [goldDb, silverDb, usdDb] = await Promise.all([
         getLatestPrice('XAU'),
@@ -39,7 +39,8 @@ export async function getMarketData(): Promise<MarketData> {
     const defaults = {
         price: 0,
         open: 0, // treating open as prevClose approx
-        date: new Date()
+        date: new Date(),
+        createdAt: new Date(0) // Very old
     };
 
     const gold = goldDb || defaults;
@@ -69,18 +70,30 @@ export async function getMarketData(): Promise<MarketData> {
         };
     };
 
+    // Calculate latest update time from the data itself
+    const timestamps = [
+        gold['createdAt'] ? new Date(gold['createdAt']).getTime() : 0,
+        silver['createdAt'] ? new Date(silver['createdAt']).getTime() : 0,
+        usd['createdAt'] ? new Date(usd['createdAt']).getTime() : 0
+    ];
+    const maxTime = Math.max(...timestamps);
+    const lastUpdated = maxTime > 0 ? new Date(maxTime).toISOString() : new Date().toISOString();
+
     return {
         gold: formatItem(gold, 'Oro (Gold)', 'USD', 'XAU'),
         silver: formatItem(silver, 'Plata (Silver)', 'USD', 'XAG'),
         usd: formatItem(usd, 'Dólar (USD)', 'COP', 'USD'),
-        lastUpdated: new Date().toISOString()
+        lastUpdated
     };
 }
 
 // Check if we need to fetch new data (e.g. if latest data is not from today/yesterday or strictly if we want real-time-ish)
 // Since this is a dashboard, maybe we fetch fresh every time or cache for X minutes?
 // Let's implement a simple check: if top record is older than 1 hour, fetch fresh.
-async function updateMarketDataIfNeeded() {
+// Check if we need to fetch new data (e.g. if latest data is not from today/yesterday or strictly if we want real-time-ish)
+// Since this is a dashboard, maybe we fetch fresh every time or cache for X minutes?
+// Let's implement a simple check: if top record is older than 1 hour, fetch fresh.
+export async function updateMarketDataIfNeeded(force: boolean = false) {
     try {
         const lastRec = await prisma.marketPrice.findFirst({
             where: { symbol: 'XAU' },
@@ -88,10 +101,10 @@ async function updateMarketDataIfNeeded() {
         });
 
         const now = new Date();
-        const needsUpdate = !lastRec || (now.getTime() - lastRec.createdAt.getTime() > 1000 * 60 * 60); // 1 hour
+        const needsUpdate = force || !lastRec || (now.getTime() - lastRec.createdAt.getTime() > 1000 * 60 * 60); // 1 hour
 
         if (needsUpdate) {
-            console.log("Fetching fresh market data from Yahoo...");
+            console.log(force ? "Forcing fresh market data..." : "Fetching fresh market data from Yahoo...");
 
             // Fetch Quote
             const [gold, silver, usd] = await Promise.all([

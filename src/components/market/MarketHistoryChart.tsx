@@ -12,9 +12,10 @@ import { fetchHistory } from '@/app/actions/market-actions';
 interface MarketHistoryChartProps {
     initialItem: MarketItem;
     selectedItem: MarketItem;
+    onHover?: (data: { price: number; change: number; changePercent: number; date: Date } | null) => void;
 }
 
-export function MarketHistoryChart({ initialItem, selectedItem }: MarketHistoryChartProps) {
+export function MarketHistoryChart({ initialItem, selectedItem, onHover }: MarketHistoryChartProps) {
     const [range, setRange] = useState<TimeRange>('1Y');
     const [data, setData] = useState<{ date: Date; price: number }[]>([]);
     const [loading, setLoading] = useState(false);
@@ -44,6 +45,37 @@ export function MarketHistoryChart({ initialItem, selectedItem }: MarketHistoryC
             style: 'currency',
             currency: selectedItem.currency
         }).format(price);
+    };
+
+    const handleMouseMove = (props: any) => {
+        if (!onHover || !props.activePayload || !props.activePayload[0]) {
+            return;
+        }
+
+        const currentData = props.activePayload[0].payload;
+        const currentIndex = data.findIndex(d => d.date === currentData.date);
+
+        let change = 0;
+        let changePercent = 0;
+
+        if (currentIndex > 0) {
+            const prevData = data[currentIndex - 1];
+            change = currentData.price - prevData.price;
+            changePercent = (change / prevData.price) * 100;
+        }
+
+        onHover({
+            price: currentData.price,
+            change: change,
+            changePercent: changePercent,
+            date: currentData.date
+        });
+    };
+
+    const handleMouseLeave = () => {
+        if (onHover) {
+            onHover(null);
+        }
     };
 
     return (
@@ -79,7 +111,11 @@ export function MarketHistoryChart({ initialItem, selectedItem }: MarketHistoryC
                         </div>
                     ) : (
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={data}>
+                            <AreaChart
+                                data={data}
+                                onMouseMove={handleMouseMove}
+                                onMouseLeave={handleMouseLeave}
+                            >
                                 <defs>
                                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
@@ -95,12 +131,13 @@ export function MarketHistoryChart({ initialItem, selectedItem }: MarketHistoryC
                                 />
                                 <YAxis
                                     tickFormatter={(val) => val.toLocaleString()}
-                                    domain={['auto', 'auto']}
+                                    domain={['dataMin', 'dataMax']}
+                                    scale="linear"
                                     tick={{ fontSize: 12 }}
                                     width={60}
                                 />
                                 <Tooltip
-                                    formatter={(value: number) => [formatPrice(value), 'Precio']}
+                                    formatter={(value: any) => [formatPrice(Number(value)), 'Precio']}
                                     labelFormatter={(label) => formatDate(new Date(label))}
                                 />
                                 <Area

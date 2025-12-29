@@ -9,6 +9,7 @@ export default async function MarketPage() {
 
     async function refresh() {
         'use server';
+        await getMarketData(true);
         revalidatePath('/market');
     }
 

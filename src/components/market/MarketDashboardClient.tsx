@@ -11,8 +11,22 @@ interface MarketDashboardClientProps {
 
 export function MarketDashboardClient({ data }: MarketDashboardClientProps) {
     const [selectedItem, setSelectedItem] = useState<MarketItem>(data.gold);
+    const [hoveredData, setHoveredData] = useState<{ price: number; change: number; changePercent: number; date: Date } | null>(null);
 
     const items = [data.gold, data.silver, data.usd];
+
+    // Helper to get display item (either real data or hovered data if selected)
+    const getDisplayItem = (item: MarketItem) => {
+        if (item.symbol === selectedItem.symbol && hoveredData) {
+            return {
+                ...item,
+                price: hoveredData.price,
+                change: hoveredData.change,
+                changePercent: hoveredData.changePercent
+            };
+        }
+        return item;
+    };
 
     return (
         <div className="space-y-6">
@@ -23,7 +37,7 @@ export function MarketDashboardClient({ data }: MarketDashboardClientProps) {
                         className="cursor-pointer"
                     >
                         <MarketCard
-                            item={item}
+                            item={getDisplayItem(item)}
                             isSelected={selectedItem.symbol === item.symbol}
                             onClick={() => setSelectedItem(item)}
                         />
@@ -35,14 +49,11 @@ export function MarketDashboardClient({ data }: MarketDashboardClientProps) {
                 <MarketHistoryChart
                     initialItem={data.gold}
                     selectedItem={selectedItem}
+                    onHover={setHoveredData}
                 />
             </div>
 
-            <div className="text-sm text-muted-foreground mt-4">
-                Última actualización: {new Date(data.lastUpdated).toLocaleString()}
-                <br />
-                Fuentes: Yahoo Finance (Datos históricos y en tiempo real).
-            </div>
+
         </div>
     );
 }
