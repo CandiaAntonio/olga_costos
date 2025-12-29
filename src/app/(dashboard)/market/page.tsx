@@ -1,6 +1,5 @@
 import { getMarketData } from '@/lib/market-service';
-import { MarketCard } from '@/components/market/MarketCard';
-import { MarketHistoryChart } from '@/components/market/MarketHistoryChart';
+import { MarketDashboardClient } from '@/components/market/MarketDashboardClient';
 import { RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { revalidatePath } from 'next/cache';
@@ -27,18 +26,7 @@ export default async function MarketPage() {
                 </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-                <MarketCard item={data.gold} />
-                <MarketCard item={data.silver} />
-                <MarketCard item={data.usd} />
-            </div>
-
-            <div className="mt-6">
-                <MarketHistoryChart
-                    initialItem={data.gold}
-                    allItems={[data.gold, data.silver, data.usd]}
-                />
-            </div>
+            <MarketDashboardClient data={data} />
 
             <div className="text-sm text-muted-foreground mt-4">
                 Última actualización: {new Date(data.lastUpdated).toLocaleString()}

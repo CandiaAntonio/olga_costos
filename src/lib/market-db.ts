@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/db';
-import yahooFinance from 'yahoo-finance2';
 
 export type TimeRange = '1D' | '5D' | '1M' | '6M' | '1Y' | '5Y' | 'ALL';
 
@@ -51,41 +50,10 @@ export async function getMarketHistory(symbol: string, range: TimeRange): Promis
         }
     });
 
-    if (data.length === 0) {
-        // Fallback: Generate dummy data for visualization if DB is empty
-        console.warn("No market data found for", symbol, range, "- Generating dummy data.");
-        return generateDummyData(symbol, startDate);
-    }
-
     return data.map(d => ({
         date: d.date,
         price: d.price
     }));
-}
-
-function generateDummyData(symbol: string, startDate: Date): MarketHistoryPoint[] {
-    const data: MarketHistoryPoint[] = [];
-    const now = new Date();
-    let currentDate = new Date(startDate);
-
-    // Base price
-    let price = symbol === 'XAU' ? 2000 : symbol === 'XAG' ? 25 : 4000;
-
-    while (currentDate <= now) {
-        // Random walk
-        const change = (Math.random() - 0.5) * (price * 0.02);
-        price += change;
-
-        data.push({
-            date: new Date(currentDate),
-            price: price
-        });
-
-        // Increment day
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    return data;
 }
 
 export async function getLatestPrice(symbol: string) {

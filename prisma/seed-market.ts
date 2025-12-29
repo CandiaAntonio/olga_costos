@@ -1,68 +1,85 @@
 import { PrismaClient } from '@prisma/client';
 // @ts-ignore
-const yahooFinance = require('yahoo-finance2').default;
+const YahooFinance = require('yahoo-finance2').default;
+const yahooFinance = new YahooFinance();
 
 const prisma = new PrismaClient();
 
-const SYMBOLS = [
-    { yahoo: 'GC=F', db: 'XAU', currency: 'USD' }, // Gold Futures
-    { yahoo: 'SI=F', db: 'XAG', currency: 'USD' }, // Silver Futures
-    { yahoo: 'COP=X', db: 'USD', currency: 'COP' }  // USD to COP
-];
-
 async function seedMarketData() {
-    console.log('Starting market data seed...');
+    console.log("Starting market data seed...");
 
+    // Symbols: Gold (GC=F), Silver (SI=F), USD/COP (COP=X)
+    const symbols = [
+        { yfSymbol: 'GC=F', dbSymbol: 'XAU', name: 'Oro' },
+        { yfSymbol: 'SI=F', dbSymbol: 'XAG', name: 'Plata' },
+        { yfSymbol: 'COP=X', dbSymbol: 'USD', name: 'Dólar' }
+    ];
+
+    const endDate = new Date();
     const startDate = new Date();
-    startDate.setFullYear(startDate.getFullYear() - 5); // 5 Years history
-    const queryOptions = { period1: startDate.toISOString() }; // Yahoo query options
+    startDate.setFullYear(startDate.getFullYear() - 5); // 5 years ago
 
-    for (const item of SYMBOLS) {
-        console.log(`Fetching data for ${item.db} (${item.yahoo})...`);
+    for (const { yfSymbol, dbSymbol, name } of symbols) {
         try {
-            const result = await yahooFinance.historical(item.yahoo, queryOptions);
+            console.log(`Fetching data for ${dbSymbol} (${yfSymbol})...`);
 
-            console.log(`Found ${result.length} records for ${item.db}. Saving to DB...`);
+            const queryOptions = { period1: startDate, period2: endDate };
+            const result = await yahooFinance.historical(yfSymbol, queryOptions);
 
-            let count = 0;
-            for (const quote of result) {
-                if (!quote.close) continue;
-
-                await prisma.marketPrice.upsert({
-                    where: {
-                        symbol_date: {
-                            symbol: item.db,
-                            date: quote.date
-                        }
-                    },
-                    update: {
-                        price: quote.close,
-                        open: quote.open || null,
-                        high: quote.high || null,
-                        low: quote.low || null,
-                        close: quote.close || null,
-                    },
-                    create: {
-                        symbol: item.db,
-                        date: quote.date,
-                        price: quote.close,
-                        currency: item.currency,
-                        open: quote.open || null,
-                        high: quote.high || null,
-                        low: quote.low || null,
-                        close: quote.close || null,
-                    }
-                });
-                count++;
+            if (!result || result.length === 0) {
+                console.warn(`No data found for ${dbSymbol}`);
+                continue;
             }
-            console.log(`Saved ${count} records for ${item.db}.`);
+
+            console.log(`Found ${result.length} records for ${dbSymbol}. Saving to DB...`);
+
+            // Batch insert for performance
+            // SQLite variable limit is usually 999, so let's batch reasonably
+            const batchSize = 100;
+            for (let i = 0; i < result.length; i += batchSize) {
+                const batch = result.slice(i, i + batchSize);
+
+                await Promise.all(batch.map(async (record: any) => {
+                    // Normalize date to start of day or ISO string
+                    const date = new Date(record.date);
+
+                    // Upsert to avoid duplicates
+                    await prisma.marketPrice.upsert({
+                        where: {
+                            symbol_date: {
+                                symbol: dbSymbol,
+                                date: date
+                            }
+                        },
+                        update: {
+                            price: record.close,
+                            open: record.open,
+                            high: record.high,
+                            low: record.low,
+                            close: record.close
+                        },
+                        create: {
+                            symbol: dbSymbol,
+                            date: date,
+                            price: record.close,
+                            currency: dbSymbol === 'USD' ? 'COP' : 'USD', // Gold/Silver in USD, USD in COP
+                            open: record.open,
+                            high: record.high,
+                            low: record.low,
+                            close: record.close
+                        }
+                    });
+                }));
+            }
+
+            console.log(`Saved ${dbSymbol} data.`);
 
         } catch (error) {
-            console.error(`Error fetching/saving ${item.db}:`, error);
+            console.error(`Error fetching/saving ${dbSymbol}:`, error);
         }
     }
 
-    console.log('Market data seeding complete.');
+    console.log("Market data seeding complete.");
 }
 
 seedMarketData()

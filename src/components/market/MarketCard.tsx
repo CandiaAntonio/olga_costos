@@ -7,37 +7,37 @@ import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 
 interface MarketCardProps {
     item: MarketItem;
+    onClick?: () => void;
+    isSelected?: boolean;
 }
 
-export function MarketCard({ item }: MarketCardProps) {
+export function MarketCard({ item, onClick, isSelected }: MarketCardProps) {
     const isPositive = item.change > 0;
     const isNegative = item.change < 0;
     const isNeutral = item.change === 0;
 
-    const startPrice = item.prevClose;
-    const endPrice = item.price;
-
-    const chartData = [
-        { value: startPrice },
-        { value: startPrice + (endPrice - startPrice) * 0.2 },
-        { value: startPrice + (endPrice - startPrice) * 0.5 },
-        { value: startPrice + (endPrice - startPrice) * 0.8 },
-        { value: endPrice },
-    ];
-
-    // Professional clean colors: Green for up, Red for down, Gray for neutral
-    const trendColor = isPositive ? '#16a34a' : isNegative ? '#dc2626' : '#6b7280';
+    // Determine unit label
+    let unitLabel = '';
+    if (item.symbol === 'XAU' || item.symbol === 'XAG') {
+        unitLabel = 'USD/oz';
+    } else if (item.symbol === 'USD') {
+        unitLabel = 'COP';
+    }
 
     return (
-        <Card className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow">
+        <Card
+            className={`overflow-hidden border shadow-sm hover:shadow-md transition-all ${isSelected ? 'ring-2 ring-primary border-primary' : ''
+                }`}
+            onClick={onClick}
+        >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-muted/50">
                 <CardTitle className="text-sm font-medium uppercase tracking-wide">
                     {item.name}
                 </CardTitle>
-                <div className="text-xs font-mono text-muted-foreground">{item.symbol}</div>
+                <div className="text-xs font-mono text-muted-foreground">{unitLabel}</div>
             </CardHeader>
             <CardContent className="pt-4">
-                <div className="flex justify-between items-end mb-4">
+                <div className="flex justify-between items-end">
                     <div>
                         <div className="text-2xl font-bold font-mono tracking-tight">
                             {item.currency === 'USD' ? '$' : ''}
@@ -53,21 +53,6 @@ export function MarketCard({ item }: MarketCardProps) {
                             </span>
                         </div>
                     </div>
-                </div>
-
-                <div className="h-[60px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData}>
-                            <YAxis domain={['dataMin', 'dataMax']} hide />
-                            <Area
-                                type="monotone"
-                                dataKey="value"
-                                stroke={trendColor}
-                                fill="transparent"
-                                strokeWidth={2}
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
                 </div>
             </CardContent>
         </Card>
